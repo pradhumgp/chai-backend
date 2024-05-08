@@ -51,12 +51,16 @@ const userSchema = new Schema(
   }
 );
 
+//userSchema pre function - this takes two input first is name of property/event and the other is a callback
+
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
 
   this.password = await bcrypt.hash(this.password, 10);
   next();
 });
+
+//userSchema Methods - used to define some methods to perform on the schema and return the value as per user requirement
 
 userSchema.methods.isPasswordCorrect = async function (password) {
   return await bcrypt.compare(password, this.password);
