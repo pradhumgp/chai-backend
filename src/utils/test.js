@@ -1,16 +1,13 @@
 const generateEmail = (name) => {
-  // Remove any parenthesis and the content inside them
-  const cleanedName = name.replace(/.*?/g, "").trim();
-  
   // Split the name by commas to separate Last and First parts
-  const [lastName, rest] = cleanedName.split(",").map((part) => part.trim());
-  
-  // Split the rest to get the First name (ignoring the middle initial if any)
+  const [lastName, rest] = name.split(",").map((part) => part.trim());
+
+  // Extract the First name (ignoring middle initials or extra details)
   const [firstName] = rest.split(" ");
 
   // Construct the email
   const email = `${firstName.toLowerCase()}.${lastName.toLowerCase()}@xyz.com`;
-  
+
   return email;
 };
 
