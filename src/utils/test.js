@@ -1,24 +1,19 @@
-const generateSQLQuery = (tableName, attributes) => {
-  // Extract the keys and values from the object
-  const queries = Object.entries(attributes).map(
-    ([key, value]) =>
-      `SELECT * FROM ${tableName} WHERE xyz='${key}' AND xyz2='${value}'`
-  );
+function generateUnionQuery(data) {
+  const queries = Object.entries(data).map(([key, value]) => {
+    const [name1, name2] = key.split("-");
+    return `SELECT * FROM TABLE WHERE CODE = '${name1}' AND ${name2} = '${value}'`;
+  });
 
-  // Join the queries with UNION
+  // Combine all queries with UNION
   return queries.join(" UNION ");
-};
+}
 
 // Example usage
-const attributes = {
-  key1: "value1",
-  key2: "value2",
-  key3: "value3",
+const formData = {
+  "NAME-NAME2": "value1",
+  "NAME3-NAME4": "value2",
+  "NAME5-NAME6": "value3"
 };
 
-const tableName = "tablename";
-
-// Generate the SQL query
-const sqlQuery = generateSQLQuery(tableName, attributes);
-
-console.log(sqlQuery);
+const resultQuery = generateUnionQuery(formData);
+console.log(resultQuery);
