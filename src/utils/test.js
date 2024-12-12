@@ -1,19 +1,18 @@
-function generateUnionQuery(data) {
-  const queries = Object.entries(data).map(([key, value]) => {
-    const [name1, name2] = key.split("-");
-    return `SELECT * FROM TABLE WHERE CODE = '${name1}' AND ${name2} = '${value}'`;
-  });
-
-  // Combine all queries with UNION
-  return queries.join(" UNION ");
-}
-
-// Example usage
-const formData = {
-  "NAME-NAME2": "value1",
-  "NAME3-NAME4": "value2",
-  "NAME5-NAME6": "value3"
+const convertToCommaSeparatedStrings = (selectedValues) => {
+  if (!Array.isArray(selectedValues) || selectedValues.length === 0) {
+    return '';
+  }
+  return selectedValues
+    .map(value => `'${value?.label || value?.value}'`) // Wrap each value in single quotes
+    .join(','); // Join them with commas
 };
 
-const resultQuery = generateUnionQuery(formData);
-console.log(resultQuery);
+// Example usage:
+const selectedValues = [
+  { label: 'Option1', value: '1' },
+  { label: 'Option2', value: '2' },
+  { label: 'Option3', value: '3' }
+];
+
+const result = convertToCommaSeparatedStrings(selectedValues);
+console.log(result); // Output: "'Option1','Option2','Option3'"
