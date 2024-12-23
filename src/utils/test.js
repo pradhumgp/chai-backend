@@ -1,33 +1,39 @@
 import * as XLSX from "xlsx";
 
 const generateExcelWithStrictValidation = () => {
-  // Example data for the Excel file
+  // Main data for the Excel sheet
   const data = [
     { Name: "Alice", Age: 25, Status: "Approved" },
     { Name: "Bob", Age: 30, Status: "Pending" },
     { Name: "Charlie", Age: 35, Status: "Rejected" },
   ];
 
-  // Convert JSON data to a worksheet
-  const ws = XLSX.utils.json_to_sheet(data);
+  // Convert main data into a worksheet
+  const mainSheet = XLSX.utils.json_to_sheet(data);
 
-  // Add data validation for the 'Status' column (C2:C100)
-  ws["!dataValidations"] = [
+  // Hidden sheet with allowed dropdown values
+  const validationData = [["Approved"], ["Pending"], ["Rejected"]];
+  const hiddenSheet = XLSX.utils.aoa_to_sheet(validationData);
+
+  // Add hidden sheet to the workbook
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, mainSheet, "Data");
+  XLSX.utils.book_append_sheet(wb, hiddenSheet, "Validation");
+
+  // Hide the validation sheet
+  hiddenSheet["!hidden"] = true;
+
+  // Apply dropdown validation to the 'Status' column
+  mainSheet["!dataValidations"] = [
     {
-      ref: "C2:C100", // Range for validation: Column C, Rows 2-100
-      type: "list", // List type validation
-      formula1: '"Approved,Pending,Rejected"', // List of allowed values
-      allowBlank: false, // Do not allow blank values
-      showDropDown: true, // Show dropdown with allowed values
-      showErrorMessage: true, // Show error message on invalid entry
+      type: "list",
+      ref: "C2:C100", // Apply to the Status column (C), rows 2-100
+      formula1: "'Validation'!$A$1:$A$3", // Reference hidden sheet range
+      showErrorMessage: true,
       errorTitle: "Invalid Value",
-      error: "You must select from: Approved, Pending, Rejected.",
+      error: "Select a value from the dropdown: Approved, Pending, Rejected.",
     },
   ];
-
-  // Create a workbook and add the worksheet
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Data");
 
   // Generate and trigger download of the Excel file
   XLSX.writeFile(wb, "StrictValidationData.xlsx");
