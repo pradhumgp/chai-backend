@@ -1,29 +1,25 @@
-const XLSX = require("xlsx");
+function groupByXYZ(data) {
+  // Use a Map to group objects by the XYZ field
+  const grouped = data.reduce((acc, obj) => {
+    const key = obj.XYZ; // Use the value of the XYZ field as the key
+    if (!acc[key]) {
+      acc[key] = []; // Initialize an array if the key doesn't exist
+    }
+    acc[key].push(obj); // Add the current object to the group
+    return acc;
+  }, {});
 
-// Function to parse Excel and exclude hidden columns
-function parseExcel(filePath) {
-  // Read the workbook
-  const workbook = XLSX.readFile(filePath);
-
-  // Assuming the first sheet is the target
-  const sheetName = workbook.SheetNames[0];
-  const worksheet = workbook.Sheets[sheetName];
-
-  // Get column visibility info
-  const colInfo = worksheet['!cols'] || []; // `!cols` holds column metadata
-
-  // Convert worksheet to JSON
-  const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }); // Convert to array of arrays
-
-  // Filter out hidden columns
-  const filteredData = jsonData.map(row =>
-    row.filter((_, colIndex) => !(colInfo[colIndex] && colInfo[colIndex].hidden))
-  );
-
-  return filteredData;
+  return grouped;
 }
 
-// Usage example
-const filePath = "./template.xlsx"; // Replace with your file path
-const result = parseExcel(filePath);
-console.log(result);
+// Example usage:
+const data = [
+  { id: 1, XYZ: "A", value: 10 },
+  { id: 2, XYZ: "B", value: 20 },
+  { id: 3, XYZ: "A", value: 30 },
+  { id: 4, XYZ: "C", value: 40 },
+  { id: 5, XYZ: "B", value: 50 },
+];
+
+const groupedData = groupByXYZ(data);
+console.log(groupedData);
