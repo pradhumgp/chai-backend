@@ -1,6 +1,6 @@
 function groupByXYZ(data) {
   // Use a Map to group objects by the XYZ field
-  const grouped = data.reduce((acc, obj) => {
+  const groupedMap = data.reduce((acc, obj) => {
     const key = obj.XYZ; // Use the value of the XYZ field as the key
     if (!acc[key]) {
       acc[key] = []; // Initialize an array if the key doesn't exist
@@ -9,7 +9,8 @@ function groupByXYZ(data) {
     return acc;
   }, {});
 
-  return grouped;
+  // Convert the grouped map to an array of arrays
+  return Object.values(groupedMap);
 }
 
 // Example usage:
