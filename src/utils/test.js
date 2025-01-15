@@ -1,26 +1,26 @@
-function groupByXYZ(data) {
-  // Use a Map to group objects by the XYZ field
-  const groupedMap = data.reduce((acc, obj) => {
-    const key = obj.XYZ; // Use the value of the XYZ field as the key
-    if (!acc[key]) {
-      acc[key] = []; // Initialize an array if the key doesn't exist
+function groupByXYZAndAddFields(data, additionalFields, fieldMapping) {
+  // Rename fields based on fieldMapping
+  const renamedData = data.map((item) => {
+    const renamedItem = { ...item };
+    for (const [oldField, newField] of Object.entries(fieldMapping)) {
+      if (oldField in renamedItem) {
+        renamedItem[newField] = renamedItem[oldField];
+        delete renamedItem[oldField]; // Remove the old field
+      }
     }
-    acc[key].push(obj); // Add the current object to the group
+    return renamedItem;
+  });
+
+  // Group objects by the new field (e.g., 'category')
+  const groupedMap = renamedData.reduce((acc, obj) => {
+    const key = obj.category; // Adjust based on your renamed key
+    if (!acc[key]) {
+      acc[key] = [];
+    }
+    acc[key].push({ ...obj, ...additionalFields });
     return acc;
   }, {});
 
-  // Convert the grouped map to an array of arrays
+  // Convert grouped map to an array of arrays
   return Object.values(groupedMap);
 }
-
-// Example usage:
-const data = [
-  { id: 1, XYZ: "A", value: 10 },
-  { id: 2, XYZ: "B", value: 20 },
-  { id: 3, XYZ: "A", value: 30 },
-  { id: 4, XYZ: "C", value: 40 },
-  { id: 5, XYZ: "B", value: 50 },
-];
-
-const groupedData = groupByXYZ(data);
-console.log(groupedData);
