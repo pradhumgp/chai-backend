@@ -1,22 +1,15 @@
-function transformFacilityNames(data) {
-  return data.map(item => {
-    if (item.FACILITY_NAMES && typeof item.FACILITY_NAMES === 'string') {
-      return {
-        ...item,
-        FACILITY_NAMES: item.FACILITY_NAMES.split(',').map(name => name.trim())
-      };
-    }
-    return item;
-  });
+function generateEmail(name) {
+  // Remove unwanted characters like commas, parentheses, etc.
+  const cleanedName = name
+    .toLowerCase()
+    .replace(/[^a-z\s]/g, "") // Keep only letters and spaces
+    .trim()
+    .replace(/\s+/g, "."); // Replace spaces with dots
+
+  return `${cleanedName}@example.com`;
 }
 
 // Example usage
-const data = [
-  { id: 1, FACILITY_NAMES: "Facility A, Facility B, Facility C" },
-  { id: 2, FACILITY_NAMES: "Facility X, Facility Y" },
-  { id: 3, FACILITY_NAMES: "" }, // Empty string
-  { id: 4 } // No FACILITY_NAMES field
-];
-
-const result = transformFacilityNames(data);
-console.log(result);
+const name = "john,doe(something)";
+const email = generateEmail(name);
+console.log(email);
