@@ -1,38 +1,22 @@
-const searchItems = async (req, res) => {
-  try {
-    // Assuming you have a `collection` instance for your MongoDB database
-    const { query } = req.body;
+function transformFacilityNames(data) {
+  return data.map(item => {
+    if (item.FACILITY_NAMES && typeof item.FACILITY_NAMES === 'string') {
+      return {
+        ...item,
+        FACILITY_NAMES: item.FACILITY_NAMES.split(',').map(name => name.trim())
+      };
+    }
+    return item;
+  });
+}
 
-    // Search the collection
-    const items = await collection.find(query).toArray();
+// Example usage
+const data = [
+  { id: 1, FACILITY_NAMES: "Facility A, Facility B, Facility C" },
+  { id: 2, FACILITY_NAMES: "Facility X, Facility Y" },
+  { id: 3, FACILITY_NAMES: "" }, // Empty string
+  { id: 4 } // No FACILITY_NAMES field
+];
 
-    // Process the items to group by `requestId`
-    const groupedItems = items.reduce((acc, item) => {
-      const { requestId, modelName } = item;
-
-      // If this `requestId` already exists, append the `modelName`
-      if (acc[requestId]) {
-        acc[requestId].modelNames.push(modelName);
-      } else {
-        // Otherwise, initialize a new entry
-        acc[requestId] = {
-          ...item, // Keep other fields from the first occurrence
-          modelNames: [modelName],
-        };
-      }
-
-      return acc;
-    }, {});
-
-    // Transform the grouped items into an array of unique results
-    const uniqueItems = Object.values(groupedItems).map((item) => ({
-      ...item,
-      modelName: item.modelNames.join(', '), // Combine modelNames into a comma-separated string
-    }));
-
-    res.status(200).json(uniqueItems);
-  } catch (error) {
-    console.error('Error searching items:', error);
-    res.status(500).json({ message: 'An error occurred', error });
-  }
-};
+const result = transformFacilityNames(data);
+console.log(result);
