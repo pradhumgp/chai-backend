@@ -1,14 +1,20 @@
-const mongoose = require("mongoose");
+const workbook = new ExcelJS.Workbook();
+const worksheet = workbook.addWorksheet('Sheet1');
 
-// Replace with your Cosmos DB MongoDB API connection string
-const mongoURI =
-  "mongodb://your-username:your-password@your-cosmosdb.mongo.cosmos.azure.com:10255/myDatabase?ssl=true&retrywrites=false";
+// Define the range for row 5
+const rowIndex = 5;
+const colStart = 1;  // Column A
+const colEnd = 5;    // Column E (adjust as needed)
 
-mongoose
-  .connect(mongoURI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-    authSource: "admin", // Required for Cosmos DB
-  })
-  .then(() => console.log("Connected to Azure Cosmos DB via MongoDB API"))
-  .catch((err) => console.error("Connection error:", err));
+for (let col = colStart; col <= colEnd; col++) {
+  const cell = worksheet.getCell(rowIndex, col);
+  
+  // Apply data validation to ensure the cell is not empty
+  cell.dataValidation = {
+    type: 'custom',
+    formula1: `LEN(A${rowIndex})>0`,  // Adjust column reference if needed
+    showErrorMessage: true,
+    errorTitle: 'Invalid Entry',
+    error: 'This field cannot be empty.',
+  };
+}
