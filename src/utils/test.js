@@ -1,20 +1,33 @@
 const workbook = new ExcelJS.Workbook();
 const worksheet = workbook.addWorksheet('Sheet1');
 
-// Define the range for row 5
-const rowIndex = 5;
-const colStart = 1;  // Column A
-const colEnd = 5;    // Column E (adjust as needed)
+// Define column name
+const columnName = 'Email'; 
 
-for (let col = colStart; col <= colEnd; col++) {
-  const cell = worksheet.getCell(rowIndex, col);
-  
-  // Apply data validation to ensure the cell is not empty
-  cell.dataValidation = {
-    type: 'custom',
-    formula1: `LEN(A${rowIndex})>0`,  // Adjust column reference if needed
-    showErrorMessage: true,
-    errorTitle: 'Invalid Entry',
-    error: 'This field cannot be empty.',
-  };
+// Find the column index dynamically
+const headerRow = worksheet.getRow(1);
+let columnIndex;
+
+headerRow.eachCell((cell, colNumber) => {
+  if (cell.value === columnName) {
+    columnIndex = colNumber;
+  }
+});
+
+// If column is found, apply validation to all rows (from row 2 onward)
+if (columnIndex) {
+  for (let row = 2; row <= 100; row++) {  // Adjust row range as needed
+    const cell = worksheet.getCell(row, columnIndex);
+
+    cell.dataValidation = {
+      type: 'custom',
+      formula1: `LEN(${cell.address})>0`, // Ensure the cell is not empty
+      allowBlank: false, // Disallow blank cells
+      showErrorMessage: true,
+      errorTitle: 'Missing Value',
+      error: `The "${columnName}" field is required.`,
+    };
+  }
+} else {
+  console.error(`Column "${columnName}" not found.`);
 }
