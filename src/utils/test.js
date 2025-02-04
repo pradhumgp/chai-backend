@@ -1,27 +1,31 @@
-const passport = require('passport');
-const SamlStrategy = require('passport-saml').Strategy;
-require('dotenv').config();
+const express = require('express');
+const passport = require('./samlAuth');
+const session = require('express-session');
+const cors = require('cors');
 
-passport.use(new SamlStrategy(
-  {
-    entryPoint: process.env.SAML_ENTRY_POINT,  // Okta SAML Login URL
-    issuer: process.env.SAML_ISSUER,          // Your Entity ID
-    callbackUrl: process.env.SAML_CALLBACK,   // ACS URL (Your backend SAML callback)
-    cert: process.env.SAML_CERT,              // Okta Certificate
-    passReqToCallback: true
-  },
-  (req, profile, done) => {
-    console.log("SAML Profile:", profile);
-    return done(null, profile);
+const app = express();
+
+app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
+app.use(session({ secret: 'your-secret-key', resave: false, saveUninitialized: true }));
+app.use(passport.initialize());
+app.use(passport.session());
+
+app.get('/api/auth/saml', passport.authenticate('saml', { failureRedirect: '/' }));
+
+app.post('/api/auth/saml/callback',
+  passport.authenticate('saml', { failureRedirect: '/' }),
+  (req, res) => {
+    console.log("Authenticated User:", req.user);
+    res.redirect(`http://localhost:3000/dashboard?user=${encodeURIComponent(JSON.stringify(req.user))}`);
   }
-));
+);
 
-passport.serializeUser((user, done) => {
-  done(null, user);
+app.get('/api/auth/user', (req, res) => {
+  if (req.isAuthenticated()) {
+    res.json(req.user);
+  } else {
+    res.status(401).json({ message: 'Unauthorized' });
+  }
 });
 
-passport.deserializeUser((user, done) => {
-  done(null, user);
-});
-
-module.exports = passport;
+app.listen(5000, () => console.log('Server running on port 5000'));
