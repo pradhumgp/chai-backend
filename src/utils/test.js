@@ -1,33 +1,27 @@
-const workbook = new ExcelJS.Workbook();
-const worksheet = workbook.addWorksheet('Sheet1');
+const passport = require('passport');
+const SamlStrategy = require('passport-saml').Strategy;
+require('dotenv').config();
 
-// Define column name
-const columnName = 'Email'; 
-
-// Find the column index dynamically
-const headerRow = worksheet.getRow(1);
-let columnIndex;
-
-headerRow.eachCell((cell, colNumber) => {
-  if (cell.value === columnName) {
-    columnIndex = colNumber;
+passport.use(new SamlStrategy(
+  {
+    entryPoint: process.env.SAML_ENTRY_POINT,  // Okta SAML Login URL
+    issuer: process.env.SAML_ISSUER,          // Your Entity ID
+    callbackUrl: process.env.SAML_CALLBACK,   // ACS URL (Your backend SAML callback)
+    cert: process.env.SAML_CERT,              // Okta Certificate
+    passReqToCallback: true
+  },
+  (req, profile, done) => {
+    console.log("SAML Profile:", profile);
+    return done(null, profile);
   }
+));
+
+passport.serializeUser((user, done) => {
+  done(null, user);
 });
 
-// If column is found, apply validation to all rows (from row 2 onward)
-if (columnIndex) {
-  for (let row = 2; row <= 100; row++) {  // Adjust row range as needed
-    const cell = worksheet.getCell(row, columnIndex);
+passport.deserializeUser((user, done) => {
+  done(null, user);
+});
 
-    cell.dataValidation = {
-      type: 'custom',
-      formula1: `LEN(${cell.address})>0`, // Ensure the cell is not empty
-      allowBlank: false, // Disallow blank cells
-      showErrorMessage: true,
-      errorTitle: 'Missing Value',
-      error: `The "${columnName}" field is required.`,
-    };
-  }
-} else {
-  console.error(`Column "${columnName}" not found.`);
-}
+module.exports = passport;
