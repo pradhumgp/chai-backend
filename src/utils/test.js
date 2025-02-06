@@ -1,15 +1,27 @@
+import React, { useEffect } from "react";
 import { useOktaAuth } from "@okta/okta-react";
 
-const LogoutButton = () => {
-  const { authState, oktaAuth } = useOktaAuth();
+const Dashboard = () => {
+  const { oktaAuth, authState } = useOktaAuth();
 
-  if (!authState?.isAuthenticated) return null;
+  useEffect(() => {
+    if (authState?.isAuthenticated) {
+      // Fetch and log user details to the console
+      oktaAuth.getUser().then((user) => {
+        console.log("Authenticated User:", user);
+      });
+    }
+  }, [authState, oktaAuth]);
 
-  const logout = async () => {
-    await oktaAuth.signOut();
-  };
+  if (!authState || authState.isPending) {
+    return <div>Loading...</div>;
+  }
 
-  return <button onClick={logout}>Logout</button>;
+  if (!authState.isAuthenticated) {
+    return <div>Please log in to view this page.</div>;
+  }
+
+  return <div>Welcome to the Dashboard!</div>;
 };
 
-export default LogoutButton;
+export default Dashboard;
