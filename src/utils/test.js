@@ -1,27 +1,14 @@
-import React, { useEffect } from "react";
-import { useOktaAuth } from "@okta/okta-react";
+function mergeAndMap(obj1, obj2, mapping = {}) {
+    let merged = { ...obj1, ...obj2 };
 
-const Dashboard = () => {
-  const { oktaAuth, authState } = useOktaAuth();
+    // Apply mapping
+    Object.keys(mapping).forEach((oldKey) => {
+        if (merged.hasOwnProperty(oldKey)) {
+            const newKey = mapping[oldKey];
+            merged[newKey] = merged[oldKey];
+            delete merged[oldKey]; // Remove old key
+        }
+    });
 
-  useEffect(() => {
-    if (authState?.isAuthenticated) {
-      // Fetch and log user details to the console
-      oktaAuth.getUser().then((user) => {
-        console.log("Authenticated User:", user);
-      });
-    }
-  }, [authState, oktaAuth]);
-
-  if (!authState || authState.isPending) {
-    return <div>Loading...</div>;
-  }
-
-  if (!authState.isAuthenticated) {
-    return <div>Please log in to view this page.</div>;
-  }
-
-  return <div>Welcome to the Dashboard!</div>;
-};
-
-export default Dashboard;
+    return merged;
+}
