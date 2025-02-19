@@ -1,33 +1,96 @@
-// Simulated API response
-const apiResponse = [
-  { requestId: "123", assignedTo: "user1@example.com", modelName: "ModelA" },
-  { requestId: "123", assignedTo: "user2@example.com", modelName: "ModelB" },
-  { requestId: "456", assignedTo: "user3@example.com", modelName: "ModelC" },
-  { requestId: "123", assignedTo: "user4@example.com", modelName: "ModelD" },
-  { requestId: "789", assignedTo: "user5@example.com", modelName: "ModelE" },
-];
+require("dotenv").config();
+const express = require("express");
+const axios = require("axios");
+const cors = require("cors");
+const { ClientSecretCredential } = require("@azure/identity");
 
-// Function to consolidate `modelName` values
-const consolidateRequests = (data) => {
-  const result = {};
+const app = express();
+const PORT = process.env.PORT || 3000;
 
-  data.forEach((item) => {
-    const { requestId, modelName, ...rest } = item;
+// Middleware
+app.use(express.json());
+app.use(cors()); // Enable CORS for frontend requests
 
-    // If requestId already exists, append the modelName
-    if (result[requestId]) {
-      result[requestId].modelName += `, ${modelName}`;
-    } else {
-      // Otherwise, create a new entry
-      result[requestId] = { ...rest, requestId, modelName };
+// Load environment variables
+const { TENANT_ID, CLIENT_ID, CLIENT_SECRET, SENDER_EMAIL } = process.env;
+
+// Debugging environment variables
+console.log("🔍 Debugging Environment Variables:");
+console.log("TENANT_ID:", TENANT_ID ? "✅ Set" : "❌ Missing");
+console.log("CLIENT_ID:", CLIENT_ID ? "✅ Set" : "❌ Missing");
+console.log("CLIENT_SECRET:", CLIENT_SECRET ? "✅ Set" : "❌ Missing");
+console.log("SENDER_EMAIL:", SENDER_EMAIL ? "✅ Set" : "❌ Missing");
+
+// Microsoft Identity Client
+const credential = new ClientSecretCredential(TENANT_ID, CLIENT_ID, CLIENT_SECRET);
+
+// Function to get an access token
+async function getAccessToken() {
+  try {
+    const tokenResponse = await credential.getToken("https://graph.microsoft.com/.default");
+    if (!tokenResponse || !tokenResponse.token) {
+      throw new Error("No token received!");
     }
-  });
+    console.log("✅ Access token acquired successfully");
+    return tokenResponse.token;
+  } catch (error) {
+    console.error("❌ Error acquiring token:", error);
+    throw error;
+  }
+}
 
-  // Convert the result object back into an array
-  return Object.values(result);
-};
+// API route to send an email
+app.post("/send-email", async (req, res) => {
+  try {
+    const { recipient, subject, body } = req.body;
 
-// Get consolidated results
-const consolidatedResults = consolidateRequests(apiResponse);
+    if (!recipient || !subject || !body) {
+      return res.status(400).json({ error: "Missing required fields (recipient, subject, body)" });
+    }
 
-console.log(consolidatedResults);
+    const accessToken = await getAccessToken();
+
+    const emailData = {
+      message: {
+        subject: subject,
+        body: {
+          contentType: "HTML",
+          content: body,
+        },
+        toRecipients: [
+          {
+            emailAddress: { address: recipient },
+          },
+        ],
+      },
+      saveToSentItems: "true",
+    };
+
+    const graphUrl = `https://graph.microsoft.com/v1.0/users/${SENDER_EMAIL}/sendMail`;
+
+    console.log("📨 Sending email to:", recipient);
+
+    const response = await axios.post(graphUrl, emailData, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    console.log("✅ Email sent successfully:", response.status);
+    res.json({ message: "Email sent successfully!" });
+  } catch (error) {
+    console.error("❌ Error sending email:", error.response?.data || error.message);
+    res.status(500).json({ error: "Failed to send email", details: error.response?.data || error.message });
+  }
+});
+
+// Health Check Route
+app.get("/", (req, res) => {
+  res.send("✅ Microsoft Graph Email API is running!");
+});
+
+// Start server
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+});
