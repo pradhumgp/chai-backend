@@ -11,26 +11,43 @@ const MyTable = ({ data }) => {
   return (
     <DataTable
       columns={columns}
-      data={data.length > 0 ? data : []}
+      data={data.length > 0 ? data : []} // Ensures table structure remains
       noDataComponent={
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
-            <tr>
-              {columns.map((col, index) => (
-                <th key={index} style={{ border: "1px solid #ccc", padding: "8px", textAlign: "left" }}>
-                  {col.name}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td colSpan={columns.length} style={{ padding: "10px", textAlign: "center", color: "#666" }}>
-                No data available
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <div style={{ width: "100%" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead>
+              <tr>
+                {columns.map((col, index) => (
+                  <th
+                    key={index}
+                    style={{
+                      padding: "10px",
+                      borderBottom: "1px solid #ccc",
+                      textAlign: "left",
+                      backgroundColor: "#f1f1f1",
+                    }}
+                  >
+                    {col.name}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td
+                  colSpan={columns.length}
+                  style={{
+                    padding: "20px",
+                    textAlign: "center",
+                    color: "#666",
+                  }}
+                >
+                  No data available
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       }
     />
   );
