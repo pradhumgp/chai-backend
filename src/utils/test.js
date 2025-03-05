@@ -1,70 +1,39 @@
-require("dotenv").config();
-const axios = require("axios");
-const { ClientSecretCredential } = require("@azure/identity");
+import React from "react";
+import DataTable from "react-data-table-component";
 
-// Load env variables
-const { TENANT_ID, CLIENT_ID, CLIENT_SECRET, SENDER_EMAIL } = process.env;
+const MyTable = ({ data }) => {
+  const columns = [
+    { name: "ID", selector: (row) => row.id, sortable: true },
+    { name: "Name", selector: (row) => row.name, sortable: true },
+    { name: "Age", selector: (row) => row.age, sortable: true },
+  ];
 
-if (!TENANT_ID || !CLIENT_ID || !CLIENT_SECRET || !SENDER_EMAIL) {
-  console.error("❌ Missing required environment variables!");
-  process.exit(1);
-}
+  return (
+    <DataTable
+      columns={columns}
+      data={data.length > 0 ? data : []}
+      noDataComponent={
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <thead>
+            <tr>
+              {columns.map((col, index) => (
+                <th key={index} style={{ border: "1px solid #ccc", padding: "8px", textAlign: "left" }}>
+                  {col.name}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colSpan={columns.length} style={{ padding: "10px", textAlign: "center", color: "#666" }}>
+                No data available
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      }
+    />
+  );
+};
 
-// Authenticate using ClientSecretCredential
-const credential = new ClientSecretCredential(TENANT_ID, CLIENT_ID, CLIENT_SECRET);
-
-// Function to get an access token
-async function getAccessToken() {
-  try {
-    const tokenResponse = await credential.getToken("https://graph.microsoft.com/.default");
-    if (!tokenResponse || !tokenResponse.token) {
-      throw new Error("No token received!");
-    }
-    console.log("✅ Access token acquired successfully");
-    return tokenResponse.token;
-  } catch (error) {
-    console.error("❌ Error acquiring token:", error);
-    throw error;
-  }
-}
-
-// Function to send an email
-async function sendMail() {
-  try {
-    const accessToken = await getAccessToken();
-    
-    const emailData = {
-      message: {
-        subject: "Azure App Service Email Test",
-        body: {
-          contentType: "HTML",
-          content: "<p>Hello, this email is sent via Microsoft Graph API from Azure!</p>",
-        },
-        toRecipients: [
-          {
-            emailAddress: { address: "recipient@example.com" },
-          },
-        ],
-      },
-      saveToSentItems: "true",
-    };
-
-    const graphUrl = `https://graph.microsoft.com/v1.0/users/${SENDER_EMAIL}/sendMail`;
-    
-    console.log("📨 Sending email...");
-    
-    const response = await axios.post(graphUrl, emailData, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
-    });
-
-    console.log("✅ Email sent successfully:", response.status);
-  } catch (error) {
-    console.error("❌ Error sending email:", error.response?.data || error.message);
-  }
-}
-
-// Run email function
-sendMail();
+export default MyTable;
